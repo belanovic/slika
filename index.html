@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Nadji sliku</title>
+    <style>
+
+        #kontejner {
+            border: 5px double black;
+            display: inline-block;
+            padding: 20px;
+            height: 460px;
+            width: 880px;
+            background: rgb(209, 209, 209);
+        }
+
+        #okvir {
+            width: 620px;
+            height: 348px;
+           /*  margin: auto; */
+            margin-left: 103px;
+            margin-right: 155px;
+            width: 620px;
+            border: 2px solid green;
+            background: white;
+            /* padding-right: 70px; */
+            overflow: hidden;
+            /* transition: all 1s; */
+        }
+
+        #klik {
+            width: 100px;
+            height: 50px;
+            background: green;
+            text-align: center;
+            line-height: 50px;
+            border-radius: 15px;
+            color: white;
+        }
+        img {
+            /* margin: 10px; */
+        transition: all 1s ease-in;
+        transform: translate(-620px);
+        }
+
+        .ubacena {
+            transform: translate(0px);
+        }
+       
+        #klik {
+            display: inline-block;
+        }
+
+        #klik:hover {
+            cursor: pointer;
+        }
+        #klik:active {
+            transform: scale(0.95, 0.95);
+        }
+        #klik::selection {
+            background: green;
+        }
+
+        #unosAdresa {
+            width: 606px;
+            height: 35px;
+            padding: 5px;
+            padding-left: 10px;
+            font-size: 20px;
+            margin: 20px;
+            margin-left: 103px;
+            border: 2px solid green;
+        }
+
+	#unosAdresa {
+	    outline: none;
+	}
+    
+     /*    #imeFajla {
+            min-width: 100px;
+            height: 30px;
+            font-size: 20px;
+            margin-left: 103px;
+            background: white;
+            border: 2px solid green;
+            display: inline-block;
+        } */
+    </style>
+</head>
+<body>
+    <div id = "kontejner">
+    <input type="text" id="unosAdresa" autofocus placeholder = "unesi adresu">
+    <div id="klik">TRAŽI</div>
+    <div id="okvir">
+        <a href="" id="linkSlika"></a>
+    </div>
+    </div>
+    <script>
+        const unosAdresa = document.querySelector('#unosAdresa');
+        const klik = document.querySelector('#klik');
+        const okvir = document.querySelector('#okvir');
+        const linkSlika = okvir.querySelector('#linkSlika');        
+
+        klik.addEventListener('click', nadjiSliku);
+        window.addEventListener('keydown', function(e){
+            if(e.keyCode == '13' && document.activeElement == document.querySelector('#unosAdresa')) {
+             nadjiSliku();
+            }
+        });
+        let staraSlikaAdresa;
+        let staraAdresa = '';
+        let drugiDeoAdrese = '';
+        function nadjiSliku(){
+            let adresa = unosAdresa.value;
+            if(unosAdresa.value == staraAdresa || unosAdresa.value == drugiDeoAdrese) return;
+            if(linkSlika.firstChild){
+                console.log(linkSlika.firstChild.src)
+	        linkSlika.removeChild(linkSlika.firstElementChild);
+	        okvir.style.background = `url(${staraSlikaAdresa})`;
+	        }else{
+                okvir.style.background = 'white';
+            }
+            const slika = document.createElement('img');
+            slika.addEventListener('load', loadedHandler);
+            let deloviAdrese = adresa.split('_');
+	        if(deloviAdrese == undefined) return;
+            drugiDeoAdrese = deloviAdrese[1].replace(/jpg$/gi, '.jpg');
+            unosAdresa.value = drugiDeoAdrese;
+            function loadedHandler(){
+                if(this.width == 620){
+                    linkSlika.appendChild(this);
+                    setTimeout(() => this.classList.add('ubacena'), 150);
+                }
+            }
+          
+            staraAdresa = adresa;
+            let reg = /\d{7,}/;
+            let originalSeq = adresa.match(reg);            
+            let originalSeqNum = parseInt(originalSeq);
+            
+            for(let i = 0; i < 20; i++){
+                let seq = (originalSeqNum + i).toString();
+                let novaAdresa = adresa.replace(reg, seq);
+
+                fetch(novaAdresa)
+                .then(function(prom){
+                    return prom.status === 200 ? prom.blob():'greska'
+                })
+                .then(function(fotka){
+                    if(fotka !== 'greska'){
+                        slika.src = URL.createObjectURL(fotka);
+                        linkSlika.href = novaAdresa;
+			            staraSlikaAdresa = slika.src;
+                    }else{
+                        return '';
+                    }
+                    
+                });
+            }    
+                
+        }
+    </script>
+</body>
+</html>
